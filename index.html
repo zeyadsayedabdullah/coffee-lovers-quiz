@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Ultimate Coffee Quiz</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f7fafc; /* A light grey background for the page */
+        }
+        #quiz-app {
+            font-family: 'Inter', sans-serif;
+        }
+        #quiz-app #question {
+            font-size: 1.75rem !important; /* Larger Question Text */
+        }
+
+        /* --- Progress Bar Method --- */
+        #progress-bar {
+            transform-origin: left;
+            transform: scaleX(0);
+            width: 100%;
+        }
+
+        /* --- Animation Keyframes --- */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes tada {
+            0% {transform: scale(1);} 10%, 20% {transform: scale(0.9) rotate(-3deg);} 30%, 50%, 70%, 90% {transform: scale(1.05) rotate(3deg);} 40%, 60%, 80% {transform: scale(1.05) rotate(-3deg);} 100% {transform: scale(1) rotate(0);}
+        }
+        @keyframes shake {
+            0%, 100% {transform: translateX(0);} 10%, 30%, 50%, 70%, 90% {transform: translateX(-5px);} 20%, 40%, 60%, 80% {transform: translateX(5px);}
+        }
+
+        /* --- Core Styles & Animations --- */
+        #quiz-app { animation: fadeIn 0.5s ease-out forwards; }
+        .slide-in-up { animation: slideInUp 0.6s ease-out forwards; }
+        .answer-btn { transition: all 0.2s ease-out; }
+        .answer-btn:hover:not(:disabled) { transform: translateY(-4px) scale(1.03); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+        .answer-btn:disabled { cursor: not-allowed; }
+        .correct { background-color: #14B8A6 !important; color: white !important; border-color: #0F766E !important; animation: tada 0.5s; }
+        .incorrect { background-color: #F43F5E !important; color: white !important; border-color: #BE123C !important; }
+        .promo-code { background: linear-gradient(45deg, #6D4C41, #A1887F); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen">
+
+    <main>
+        <div class="text-center mb-6">
+            <h1 class="text-5xl font-extrabold text-gray-800">The Ultimate Coffee Quiz ☕</h1>
+            <p class="text-lg text-gray-600 mt-2">Test your knowledge about the world's favorite bean!</p>
+        </div>
+
+        <div id="quiz-app" class="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-6 md:p-8 mx-auto">
+            <div id="start-screen" class="text-center">
+                <p class="text-gray-500 mb-8 mt-4">Click 'Start Quiz' to begin your journey.</p>
+                <button id="start-quiz-btn" class="mt-4 w-full md:w-auto bg-amber-800 text-white font-bold py-3 px-6 rounded-lg hover:bg-amber-900 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                    Start Quiz!
+                </button>
+            </div>
+
+            <div id="quiz-container" class="quiz-container hidden">
+                <div class="flex items-center justify-between mb-4 pt-4">
+                    <div id="progress" class="text-sm font-medium text-gray-600"></div>
+                    <div id="score" class="text-sm font-semibold text-teal-600"></div>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6 overflow-hidden">
+                    <div id="progress-bar" class="bg-gradient-to-r from-teal-400 to-amber-500 h-2.5 rounded-full transition-transform duration-500 ease-out"></div>
+                </div>
+                <h2 id="question" class="font-semibold text-gray-800 text-center mb-6 min-h-[56px] opacity-0"></h2>
+                <div id="answer-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                <div id="feedback-message" class="text-center mt-4 font-semibold min-h-[24px] opacity-0 transition-opacity duration-300"></div>
+            </div>
+
+            <div id="result-container" class="hidden text-center">
+                <div id="result-content"></div>
+                <button id="restart-btn" class="mt-8 w-full md:w-auto bg-amber-800 text-white font-bold py-3 px-6 rounded-lg hover:bg-amber-900 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                    Play Again!
+                </button>
+            </div>
+        </div>
+    </main>
+
+
+    <script>
+    // --- CONFIGURATION & DATA ---
+    const questions = [
+        { question: "Where is coffee believed to have originated?", answers: [{ text: "Brazil", correct: false }, { text: "Ethiopia", correct: true }, { text: "Colombia", correct: false }, { text: "Vietnam", correct: false }] },
+        { question: "What are the two main species of coffee beans?", answers: [{ text: "Typica & Bourbon", correct: false }, { text: "Java & Sumatra", correct: false }, { text: "Light & Dark", correct: false }, { text: "Arabica & Robusta", correct: true }] },
+        { question: "Which country is the world's largest producer of coffee?", answers: [{ text: "Ethiopia", correct: false }, { text: "Colombia", correct: false }, { text: "Brazil", correct: true }, { text: "India", correct: false }] },
+        { question: "What is a 'shot' of concentrated coffee brewed by forcing hot water under high pressure through finely-ground coffee beans?", answers: [{ text: "Espresso", correct: true }, { text: "Drip Coffee", correct: false }, { text: "Americano", correct: false }, { text: "Cold Brew", correct: false }] },
+        { question: "The word 'latte' is Italian for what?", answers: [{ text: "Foam", correct: false }, { text: "Coffee", correct: false }, { text: "Cream", correct: false }, { text: "Milk", correct: true }] },
+        { question: "A professional who prepares and serves espresso-based coffee drinks is called a...?", answers: [{ text: "Sommelier", correct: false }, { text: "Barista", correct: true }, { text: "Roaster", correct: false }, { text: "Cupper", correct: false }] },
+        { question: "What is Kopi Luwak, one of the world's most expensive coffees?", answers: [{ text: "Coffee aged in barrels", correct: false }, { text: "Coffee made from beans eaten and excreted by a civet", correct: true }, { text: "A rare, wild coffee plant", correct: false }, { text: "Coffee grown at high altitudes", correct: false }] },
+        { question: "What does an 'Americano' consist of?", answers: [{ text: "Espresso and foamed milk", correct: false }, { text: "Espresso diluted with hot water", correct: true }, { text: "Drip coffee with a shot of espresso", correct: false }, { text: "Espresso with chocolate", correct: false }] },
+        { question: "The process of removing caffeine from coffee beans is known as...?", answers: [{ text: "Roasting", correct: false }, { text: "Grinding", correct: false }, { text: "Decaffeination", correct: true }, { text: "Brewing", correct: false }] },
+        { question: "Which of these is NOT a common coffee brewing method?", answers: [{ text: "French Press", correct: false }, { text: "Pour Over", correct: false }, { text: "Espresso Machine", correct: false }, { text: "Dehydration", correct: true }] }
+    ];
+    const positiveFeedback = ["That's it!", "Correct!", "Awesome!", "You got it!"];
+    const negativeFeedback = ["Not quite.", "That was a tricky one.", "So close!"];
+
+    // --- DOM ELEMENTS ---
+    const elements = {
+        quizApp: document.getElementById('quiz-app'),
+        startScreen: document.getElementById('start-screen'),
+        startQuizBtn: document.getElementById('start-quiz-btn'),
+        quizContainer: document.getElementById('quiz-container'),
+        resultContainer: document.getElementById('result-container'),
+        question: document.getElementById('question'),
+        answerButtons: document.getElementById('answer-buttons'),
+        progress: document.getElementById('progress'),
+        score: document.getElementById('score'),
+        progressBar: document.getElementById('progress-bar'),
+        resultContent: document.getElementById('result-content'),
+        restartBtn: document.getElementById('restart-btn'),
+        feedbackMessage: document.getElementById('feedback-message')
+    };
+
+    // --- SOUND EFFECTS ---
+    let soundsReady = false;
+    let correctSound, incorrectSound, clickSound, startSound;
+
+    if (typeof Tone !== 'undefined') {
+        correctSound = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'sine' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.4 }, volume: -8 }).toDestination();
+        incorrectSound = new Tone.MembraneSynth({ pitchDecay: 0.1, octaves: 2, envelope: { attack: 0.001, decay: 0.3, sustain: 0.01, release: 0.2 }, volume: -10 }).toDestination();
+        clickSound = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.1 }, volume: -20 }).toDestination();
+        startSound = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'triangle8' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 }, volume: -12 }).toDestination();
+    }
+
+    // --- STATE MANAGEMENT ---
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    // --- CORE FUNCTIONS ---
+    async function initializeAudioAndStartGame() {
+        if (typeof Tone !== 'undefined' && !soundsReady) {
+            await Tone.start();
+            soundsReady = true;
+        }
+        elements.startScreen.classList.add('hidden');
+        elements.quizContainer.classList.remove('hidden');
+        currentQuestionIndex = 0;
+        score = 0;
+        elements.resultContainer.classList.add('hidden');
+
+        elements.progressBar.style.transition = 'none';
+        elements.progressBar.style.transform = 'scaleX(0)';
+        void elements.progressBar.offsetWidth;
+        elements.progressBar.style.transition = '';
+
+        if (soundsReady && startSound) {
+            const now = Tone.now();
+            startSound.triggerAttackRelease(['C4', 'E4', 'G4'], '8n', now);
+        }
+        displayNextQuestion();
+    }
+
+    function displayNextQuestion() {
+        resetState();
+        updateProgressText();
+        const currentQuestion = questions[currentQuestionIndex];
+        elements.question.textContent = currentQuestion.question;
+        elements.question.style.opacity = 1;
+        elements.question.classList.add('slide-in-up');
+
+        const buttonColors = [
+            ['bg-sky-100', 'border-sky-200', 'hover:bg-sky-200'],
+            ['bg-amber-100', 'border-amber-200', 'hover:bg-amber-200'],
+            ['bg-emerald-100', 'border-emerald-200', 'hover:bg-emerald-200'],
+            ['bg-rose-100', 'border-rose-200', 'hover:bg-rose-200']
+        ];
+
+        currentQuestion.answers.forEach((answer, index) => {
+            const button = document.createElement('button');
+            button.textContent = answer.text;
+            const colorClasses = buttonColors[index % buttonColors.length];
+            button.classList.add('answer-btn', 'w-full', 'text-left', 'p-4', 'rounded-lg', 'border-2', 'font-semibold', 'text-gray-700', 'shadow-sm', 'opacity-0', ...colorClasses);
+            button.style.animation = `slideInUp 0.5s ease-out ${0.1 * (index + 1)}s forwards`;
+            if (answer.correct) {
+                button.dataset.correct = true;
+            }
+            button.addEventListener('click', handleAnswerSelection);
+            elements.answerButtons.appendChild(button);
+        });
+    }
+
+    function handleAnswerSelection(e) {
+        updateProgressBar();
+
+        if (soundsReady && clickSound) clickSound.triggerAttackRelease('C5', '16n');
+        const selectedBtn = e.target;
+        const isCorrect = selectedBtn.dataset.correct === "true";
+        let nextQuestionDelay; // <-- Variable to hold the delay time
+
+        Array.from(elements.answerButtons.children).forEach(button => {
+            button.disabled = true;
+            if (button.dataset.correct) {
+                button.classList.add('correct');
+            }
+        });
+
+        if (isCorrect) {
+            score++;
+            showFeedback(true);
+            elements.quizApp.classList.add('tada');
+            if (soundsReady && correctSound) correctSound.triggerAttackRelease(['C5', 'E5', 'G5'], '8n', Tone.now() + 0.1);
+            nextQuestionDelay = 500; // 0.5 second delay for correct answers
+        } else {
+            selectedBtn.classList.add('incorrect');
+            showFeedback(false);
+            elements.quizApp.classList.add('shake');
+            if (soundsReady && incorrectSound) incorrectSound.triggerAttackRelease('C2', '8n', Tone.now() + 0.1);
+            nextQuestionDelay = 1500; // <-- 1.5 second delay for incorrect answers
+        }
+
+        setTimeout(() => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                displayNextQuestion();
+            } else {
+                showFinalResult();
+            }
+        }, nextQuestionDelay); // <-- Use the variable delay here
+    }
+
+    function showFinalResult() {
+        elements.quizContainer.classList.add('hidden');
+        elements.resultContainer.classList.remove('hidden');
+        elements.resultContainer.style.opacity = 0;
+        setTimeout(() => { elements.resultContainer.style.opacity = 1; }, 100);
+
+        const passingScore = 7;
+        let resultHTML = '';
+        if (score >= passingScore) {
+            const title = score === questions.length ? "Perfect Score! You're a Coffee Connoisseur!" : "Amazing Job!";
+            const message = score === questions.length ? "A perfect score! Your knowledge is truly impressive." : `You scored ${score} out of ${questions.length}. You really know your beans!`;
+            resultHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-24 w-24 -mt-4 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                <h2 class="text-3xl font-bold text-gray-800 mt-2">${title}</h2>
+                <p class="text-lg text-gray-600 mt-2">${message}</p>
+                <p class="text-gray-500 mt-4">As a reward, here's a special code for our coffee shop:</p>
+                <div class="mt-4 bg-amber-50 text-4xl font-mono font-bold p-4 rounded-lg border-2 border-dashed border-amber-300">
+                    <span class="promo-code">BREW15</span>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">*For your next purchase!</p>`;
+        } else {
+            resultHTML = `
+                <svg class="mx-auto h-20 w-20 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <h2 class="text-3xl font-bold text-gray-800 mt-4">Great Try!</h2>
+                <p class="text-lg text-gray-600 mt-2">You scored ${score} out of ${questions.length}.</p>
+                <p class="text-gray-500 mt-4">You need ${passingScore} or more correct answers for the discount. Why not try again?</p>`;
+        }
+        elements.resultContent.innerHTML = resultHTML;
+    }
+
+    // --- HELPER FUNCTIONS ---
+    function resetState() {
+        elements.question.classList.remove('slide-in-up');
+        elements.question.style.opacity = 0;
+        elements.quizApp.classList.remove('tada', 'shake');
+        elements.feedbackMessage.classList.add('opacity-0');
+        while (elements.answerButtons.firstChild) {
+            elements.answerButtons.removeChild(elements.answerButtons.firstChild);
+        }
+    }
+
+    function updateProgressText() {
+        elements.progress.textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+        elements.score.textContent = `Score: ${score}`;
+    }
+
+    function updateProgressBar() {
+        const progressValue = (currentQuestionIndex + 1) / questions.length;
+        elements.progressBar.style.transform = `scaleX(${progressValue})`;
+    }
+
+
+    function showFeedback(isCorrect) {
+        const message = isCorrect
+            ? positiveFeedback[Math.floor(Math.random() * positiveFeedback.length)]
+            : negativeFeedback[Math.floor(Math.random() * negativeFeedback.length)];
+        elements.feedbackMessage.textContent = message;
+        elements.feedbackMessage.className = `text-center mt-4 font-semibold min-h-[24px] transition-opacity duration-300 opacity-100 ${isCorrect ? 'text-teal-600' : 'text-rose-600'}`;
+    }
+
+    // --- INITIALIZATION ---
+    elements.startQuizBtn.addEventListener('click', initializeAudioAndStartGame);
+    elements.restartBtn.addEventListener('click', initializeAudioAndStartGame);
+    </script>
+</body>
+</html>
