@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Ultimate Coffee Quiz</title>
     
+    <!-- External Scripts and Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
+    <!-- Custom Styles -->
     <style>
         body {
             background-color: #f7fafc; /* A light grey background for the page */
@@ -48,14 +50,28 @@
         .promo-code { background: linear-gradient(45deg, #6D4C41, #A1887F); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     </style>
 </head>
-<body class="bg-gray-50 flex items-center justify-center min-h-screen">
+<body class="bg-gray-50">
 
-    <main>
-        <div class="text-center mb-6">
-            <h1 class="text-5xl font-extrabold text-gray-800">The Ultimate Coffee Quiz ☕</h1>
-            <p class="text-lg text-gray-600 mt-2">Test your knowledge about the world's favorite bean!</p>
+    <header class="bg-white shadow-sm w-full sticky top-0 z-10">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a class="text-2xl font-bold text-amber-800 hover:text-amber-900" href="#">BeanBliss ☕</a>
+            <div class="hidden md:flex items-center space-x-6">
+                <a class="text-gray-600 hover:text-amber-800" href="#">Home</a>
+                <a class="text-gray-600 hover:text-amber-800" href="#">Shop</a>
+                <a class="text-gray-600 hover:text-amber-800" href="#">About</a>
+                <a class="font-semibold text-amber-800 border-b-2 border-amber-800" href="#">Quiz</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 md:py-16">
+        <!-- Title and Subtitle -->
+        <div class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-800">The Ultimate Coffee Quiz</h1>
+            <p class="text-lg text-gray-600 mt-2">Test your knowledge and unlock a tasty reward!</p>
         </div>
 
+        <!-- Quiz Application Container -->
         <div id="quiz-app" class="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-6 md:p-8 mx-auto">
             <div id="start-screen" class="text-center">
                 <p class="text-gray-500 mb-8 mt-4">Click 'Start Quiz' to begin your journey.</p>
@@ -85,6 +101,10 @@
             </div>
         </div>
     </main>
+
+    <footer class="w-full text-center p-6 mt-8 border-t bg-white">
+        <p class="text-gray-600">&copy; 2024 BeanBliss Coffee Co. All Rights Reserved.</p>
+    </footer>
 
 
     <script>
@@ -245,17 +265,20 @@
                 </svg>
                 <h2 class="text-3xl font-bold text-gray-800 mt-2">${title}</h2>
                 <p class="text-lg text-gray-600 mt-2">${message}</p>
-                <p class="text-gray-500 mt-4">As a reward, here's a special code for our coffee shop:</p>
+                <p class="text-gray-500 mt-4">You've earned a discount! Use the code below to explore our collection.</p>
                 <div class="mt-4 bg-amber-50 text-4xl font-mono font-bold p-4 rounded-lg border-2 border-dashed border-amber-300">
                     <span class="promo-code">BREW15</span>
                 </div>
-                <p class="text-xs text-gray-400 mt-2">*For your next purchase!</p>`;
+                <p class="text-xs text-gray-400 mt-2">*For your next purchase!</p>
+                <button class="mt-6 w-full md:w-auto bg-amber-800 text-white font-bold py-3 px-8 rounded-lg hover:bg-amber-900 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                    Shop Our Collection
+                </button>`;
         } else {
             resultHTML = `
                 <svg class="mx-auto h-20 w-20 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 <h2 class="text-3xl font-bold text-gray-800 mt-4">Great Try!</h2>
                 <p class="text-lg text-gray-600 mt-2">You scored ${score} out of ${questions.length}.</p>
-                <p class="text-gray-500 mt-4">You need ${passingScore} or more correct answers for the discount. Why not try again?</p>`;
+                <p class="text-gray-500 mt-4">You need ${passingScore} or more correct answers for the discount. Why not try again to unlock your reward?</p>`;
         }
         elements.resultContent.innerHTML = resultHTML;
     }
@@ -296,3 +319,4 @@
     </script>
 </body>
 </html>
+
